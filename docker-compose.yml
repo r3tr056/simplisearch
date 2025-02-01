@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=vector_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - SERVER_PORT=8080
+      - MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+      - MODEL_CACHE_DIR=/app/models
+    volumes:
+      - model_cache:/app/models
+    networks:
+      - vector_net
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=vector_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - vector_net
+
+volumes:
+  postgres_data:
+  model_cache:
+
+networks:
+  vector_net:
+    driver: bridge
